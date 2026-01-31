@@ -4,10 +4,11 @@ import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { fetchBirds } from '../lib/api';
 import BirdCard from '../components/BirdCard';
+import FilterBar from '../components/FilterBar';
 import '../styles/Discovery.css';
 
 export default function Discovery() {
-    const [birds, setBirds] = useState([]);
+    const [allBirds, setAllBirds] = useState([]); // Store master list
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -15,28 +16,74 @@ export default function Discovery() {
     const initialQuery = searchParams.get('q') || '';
     const [searchTerm, setSearchTerm] = useState(initialQuery);
 
+    // Filter State
+    const [filters, setFilters] = useState({
+        region: 'All',
+        order: 'All',
+        family: 'All',
+        status: 'All'
+    });
+
+    // 1. Fetch ALL data once on mount
     useEffect(() => {
-        async function loadBirds() {
+        async function loadData() {
             setLoading(true);
-            // Pass searchTerm directly to API for server-side filtering
-            const data = await fetchBirds(searchTerm);
-            setBirds(data);
+            // Fetch everything (empty query, empty filters)
+            // api.js is effectively a "data syncer" now
+            const data = await fetchBirds();
+            setAllBirds(data);
             setLoading(false);
         }
+        loadData();
+    }, []);
 
-        // Debounce slightly to avoid pounding API on every keystroke
+    // 2. Sync URL with Search Term (Debounced)
+    useEffect(() => {
         const timeoutId = setTimeout(() => {
-            loadBirds();
-            // Update URL
             if (searchTerm) setSearchParams({ q: searchTerm });
             else setSearchParams({});
         }, 500);
-
         return () => clearTimeout(timeoutId);
     }, [searchTerm, setSearchParams]);
 
-    // We no longer need useMemo filtering since API does it
-    const filteredBirds = birds;
+    // 3. Client-Side Filtering (Instant)
+    const filteredBirds = useMemo(() => {
+        return allBirds.filter(bird => {
+            // Text Search
+            if (searchTerm) {
+                const q = searchTerm.toLowerCase();
+                const matchesName = bird.name.english.toLowerCase().includes(q) ||
+                    bird.name.latin.toLowerCase().includes(q) ||
+                    bird.name.spanish.toLowerCase().includes(q);
+                if (!matchesName) return false;
+            }
+
+            // Region
+            if (filters.region !== 'All') {
+                const birdRegions = Array.isArray(bird.rawRegion) ? bird.rawRegion : [bird.rawRegion];
+                const matchesRegion = birdRegions.some(r => r && r.includes(filters.region)) ||
+                    (bird.location && bird.location.includes(filters.region));
+                if (!matchesRegion) return false;
+            }
+
+            // Order
+            if (filters.order !== 'All') {
+                if (bird.rawOrder !== filters.order) return false;
+            }
+
+            // Family
+            if (filters.family !== 'All') {
+                if (bird.rawFamily !== filters.family) return false;
+            }
+
+            // Status
+            if (filters.status !== 'All') {
+                if (bird.conservationStatus !== filters.status) return false;
+            }
+
+            return true;
+        });
+    }, [allBirds, searchTerm, filters]);
 
     return (
         <div className="discovery-page">
@@ -57,6 +104,8 @@ export default function Discovery() {
                         Showing {filteredBirds.length} species
                     </p>
                 </header>
+
+                <FilterBar filters={filters} onFilterChange={setFilters} />
 
                 {loading ? (
                     <div className="loading-grid">

@@ -21,60 +21,63 @@ function getFallbackImage(seedString) {
     return MOCK_IMAGES[index];
 }
 
-export async function fetchBirds(query = '') {
+export async function fetchBirds(query = '', filters = {}) {
     try {
-        let url = `${API_URL}?page=1&pageSize=50&hasImg=true`;
+        // STRATEGY CHANGE: 
+        // The API limits page size to 100, and server-side filtering for 'status' is broken.
+        // Since the total dataset is small (~1000 birds), we will fetch ALL data once 
+        // and perform all filtering on the client side. This ensures accurate results.
 
-        // Use server-side search if query exists
-        if (query) {
-            url += `&name=${encodeURIComponent(query)}`;
-        }
-
-        const response = await fetch(url, {
+        // 1. Fetch first page to get total count
+        const firstPageRes = await fetch(`${API_URL}?page=1&pageSize=100&hasImg=true`, {
             headers: { 'api-key': API_KEY }
         });
 
-        if (!response.ok) {
-            console.error("API Error:", response.status);
-            return [];
+        if (!firstPageRes.ok) throw new Error('API Error');
+
+        const firstPageData = await firstPageRes.json();
+        const total = firstPageData.total;
+        let allEntities = [...firstPageData.entities];
+
+        // 2. Fetch remaining pages in parallel
+        const pageSize = 100;
+        const totalPages = Math.ceil(total / pageSize);
+        const promises = [];
+
+        for (let p = 2; p <= totalPages; p++) {
+            promises.push(
+                fetch(`${API_URL}?page=${p}&pageSize=${pageSize}&hasImg=true`, {
+                    headers: { 'api-key': API_KEY }
+                }).then(res => res.json())
+            );
         }
 
-        const data = await response.json();
-        const entities = data.entities || [];
+        const results = await Promise.all(promises);
+        results.forEach(data => {
+            if (data.entities) allEntities.push(...data.entities);
+        });
 
-        // Dual-Strategy Normalizer:
-        // Case A (List/Default): Entities are "Recordings" (fields: en, id, file)
-        // Case B (Search): Entities are "Species" (fields: name, id, recordings[])
-
-        const uniqueBirds = [];
+        // 3. Normalize Data
         const seenNames = new Set();
+        const uniqueBirds = [];
 
-        for (const item of entities) {
-            // Determine English Name based on structure
+        for (const item of allEntities) {
             const englishName = item.name || item.en;
-
             if (!englishName) continue;
 
             if (!seenNames.has(englishName)) {
                 seenNames.add(englishName);
 
-                // Determine Audio
-                // Case A: item.file
-                // Case B: item.recordings[0].file
+                // ... (Logic for Audio/Image/Coords remains same) ...
                 let audioUrl = item.file;
                 if (!audioUrl && item.recordings && item.recordings.length > 0) {
                     audioUrl = item.recordings[0].file;
                 }
 
-                // Determine Image (Nuthatch images can be in top-level or nested)
-                // We primarily use our logical fallback if the API image is missing/broken
                 const apiImage = (item.images && item.images.length > 0) ? item.images[0] : null;
 
-                // Determine Coordinates
                 let lat = item.lat;
                 let lng = item.lng;
-
-                // Fallback to recording coordinates if main item lacks them
                 if ((!lat || !lng) && item.recordings && item.recordings.length > 0) {
                     const rec = item.recordings[0];
                     if (rec.lat && rec.lng) {
@@ -82,12 +85,9 @@ export async function fetchBirds(query = '') {
                         lng = rec.lng;
                     }
                 }
-
-                // Ensure they are numbers
                 const coords = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null;
 
                 uniqueBirds.push({
-                    // Use Name as ID for robust routing since numeric IDs vary between endpoints
                     uid: englishName,
                     name: {
                         english: englishName,
@@ -103,12 +103,53 @@ export async function fetchBirds(query = '') {
                     diet: "Insects, Seeds, Berries",
                     audio: audioUrl,
                     coords: coords,
-                    location: item.cnt || (item.recordings && item.recordings[0]?.cnt) || "North America"
+                    location: item.cnt || (item.recordings && item.recordings[0]?.cnt) || "North America",
+                    // Keep raw fields for filtering
+                    rawRegion: item.region || [],
+                    rawOrder: item.order,
+                    rawFamily: item.family
                 });
             }
         }
 
-        return uniqueBirds;
+        // 4. Client-Side Filtering
+        return uniqueBirds.filter(bird => {
+            // Text Search
+            if (query) {
+                const q = query.toLowerCase();
+                const matchesName = bird.name.english.toLowerCase().includes(q) ||
+                    bird.name.latin.toLowerCase().includes(q) ||
+                    bird.name.spanish.toLowerCase().includes(q);
+                if (!matchesName) return false;
+            }
+
+            // Region Filter
+            if (filters.region && filters.region !== 'All') {
+                // Check if the birds region array includes the selected region
+                // OR if the single location string matches
+                // The API region data is a bit inconsistent, simplified check:
+                const birdRegions = Array.isArray(bird.rawRegion) ? bird.rawRegion : [bird.rawRegion];
+                const matchesRegion = birdRegions.some(r => r && r.includes(filters.region)) ||
+                    (bird.location && bird.location.includes(filters.region));
+                if (!matchesRegion) return false;
+            }
+
+            // Order Filter
+            if (filters.order && filters.order !== 'All') {
+                if (bird.rawOrder !== filters.order) return false;
+            }
+
+            // Family Filter
+            if (filters.family && filters.family !== 'All') {
+                if (bird.rawFamily !== filters.family) return false;
+            }
+
+            // Status Filter (Already handled in UI, but good to have here too if we move logic)
+            // For now, UI handles status, but we can return all matches here.
+
+            return true;
+        });
+
     } catch (error) {
         console.error('Error fetching bird data:', error);
         return [];

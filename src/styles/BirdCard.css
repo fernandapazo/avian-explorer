@@ -82,11 +82,23 @@
 }
 
 .status-dot.green {
-    background-color: var(--color-accent);
+    background-color: #22c55e;
+    /* Green-500 */
+}
+
+.status-dot.yellow {
+    background-color: #eab308;
+    /* Yellow-500 */
 }
 
 .status-dot.orange {
-    background-color: #f59e0b;
+    background-color: #f97316;
+    /* Orange-500 */
+}
+
+.status-dot.red {
+    background-color: #ef4444;
+    /* Red-500 */
 }
 
 .bird-card-latin {

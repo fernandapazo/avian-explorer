@@ -4,7 +4,25 @@ import { MapPin, Wind } from 'lucide-react';
 import '../styles/BirdCard.css';
 
 export default function BirdCard({ bird }) {
-    const statusColor = bird.conservationStatus.includes("Concern") ? "orange" : "green";
+    const getStatusColor = (status) => {
+        const s = status.toLowerCase();
+
+        // Red - High Danger
+        if (s.includes('endangered') || s.includes('watch list')) return 'red';
+
+        // Orange - Concerning
+        if (s.includes('vulnerable') || s.includes('steep decline')) return 'orange';
+
+        // Yellow - Watch Closely / Restricted
+        if (s.includes('declining') || s.includes('threatened') || s.includes('restricted')) return 'yellow';
+
+        // Green - Safe
+        if (s.includes('concern') || s.includes('stable')) return 'green';
+
+        return 'green'; // Default
+    };
+
+    const statusColor = getStatusColor(bird.conservationStatus);
 
     return (
         <Link to={`/bird/${bird.uid}`} className="bird-card group">
