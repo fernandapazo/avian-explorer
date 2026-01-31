@@ -115,6 +115,55 @@ export async function fetchBirds(query = '') {
     }
 }
 
+async function fetchBirdAudio(scientificName) {
+    if (!scientificName) return null;
+
+    try {
+        const apiKey = import.meta.env.VITE_XENO_CANTO_KEY;
+        // If no key is present, we can't fetch audio
+        if (!apiKey) {
+            console.warn('No Xeno-canto API Key found. Audio disabled.');
+            return null;
+        }
+
+        // Parse scientific name into Genus and Species for V3 tags
+        // Example: "Tyto alba" -> "gen:Tyto sp:alba"
+        const parts = scientificName.split(' ');
+        let query = parts.length >= 2
+            ? `gen:${parts[0]} sp:${parts[1]}`
+            : scientificName;
+
+        const response = await fetch(`https://xeno-canto.org/api/3/recordings?query=${encodeURIComponent(query)}&key=${apiKey}`);
+
+        if (!response.ok) {
+            console.error('Xeno-canto API Error:', response.status);
+            return null;
+        }
+
+        const data = await response.json();
+
+        // Find the first recording that has audio AND coordinates
+        if (data.recordings && data.recordings.length > 0) {
+            // Find finding a high-quality recording with coordinates would be ideal, 
+            // but for now let's just find ANY recording with coords.
+            const validRec = data.recordings.find(r => r.file && r.lat && r.lon);
+
+            // Fallback to first recording if none have coords (at least we get audio)
+            const rec = validRec || data.recordings[0];
+
+            return {
+                file: rec.file,
+                lat: rec.lat ? parseFloat(rec.lat) : null,
+                lng: rec.lon ? parseFloat(rec.lon) : null // Map expects 'lng', API gives 'lon'
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching audio from Xeno-canto:', error);
+        return null;
+    }
+}
+
 // Fetch by Name using the search endpoint
 export async function fetchBirdById(nameId) {
     if (!nameId) return null;
@@ -124,5 +173,19 @@ export async function fetchBirdById(nameId) {
 
     // Find exact match just in case search is fuzzy
     const match = results.find(b => b.name.english.toLowerCase() === nameId.toLowerCase());
-    return match || results[0] || null;
+    const bird = match || results[0] || null;
+
+    if (bird) {
+        // Fetch audio directly from Xeno-canto since Nuthatch isn't providing it
+        const xcData = await fetchBirdAudio(bird.name.latin);
+        if (xcData) {
+            bird.audio = xcData.file;
+            // Only update coords if we got valid ones from Xeno-canto
+            if (xcData.lat && xcData.lng) {
+                bird.coords = { lat: xcData.lat, lng: xcData.lng };
+            }
+        }
+    }
+
+    return bird;
 }
