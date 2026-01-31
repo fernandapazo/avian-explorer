@@ -11,10 +11,12 @@ main {
 /* Shared Grid Layout for Cards */
 .birds-grid {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
     width: 100%;
     margin-top: 2rem;
+    /* Ensure cards don't get too wide on mobile */
+    justify-items: center;
 }
 
 @media (min-width: 640px) {

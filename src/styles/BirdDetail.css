@@ -39,11 +39,37 @@
     }
 }
 
+@media (max-width: 768px) {
+    .detail-hero {
+        padding: 2rem 0;
+    }
+
+    .hero-grid {
+        gap: 2rem;
+    }
+
+    .hero-img {
+        height: 350px;
+    }
+
+    .species-name {
+        font-size: 2.5rem;
+    }
+
+    .gateway-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .detail-visual {
     position: relative;
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-xl);
+    /* Constrain image size and center it */
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .hero-img {
@@ -175,9 +201,19 @@
 
 /* Audio Player */
 .audio-player-container {
-    padding: 2rem 0;
+    padding: 0;
     background: #1a2f23;
     color: white;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audio-player-container.visible {
+    padding: 2rem 0;
+    max-height: 300px;
+    opacity: 1;
 }
 
 .player-box {

@@ -2,7 +2,18 @@
 import { Play, Share2, Info, Feather, Map as MapIcon, Leaf, Ruler } from 'lucide-react';
 import '../../styles/BirdDetail.css';
 
-export function DetailHero({ bird }) {
+export function DetailHero({ bird, onPlay }) {
+    const scrollToAudio = () => {
+        if (onPlay) onPlay();
+        // Small delay to allow expansion before scrolling
+        setTimeout(() => {
+            const audioSection = document.getElementById('audio-player');
+            if (audioSection) {
+                audioSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 100);
+    };
+
     return (
         <section className="detail-hero">
             <div className="container hero-grid">
@@ -15,7 +26,7 @@ export function DetailHero({ bird }) {
 
                 <div className="detail-header">
                     <div className="header-badges">
-                        <span className="badge-pill green">Least Concern</span>
+                        <span className="badge-pill green">{bird.conservationStatus || 'Least Concern'}</span>
                         <span className="badge-pill outline">{bird.name.latin}</span>
                     </div>
 
@@ -26,7 +37,7 @@ export function DetailHero({ bird }) {
                     </p>
 
                     <div className="action-row">
-                        <button className="btn btn-primary big-btn">
+                        <button className="btn btn-primary big-btn" onClick={scrollToAudio}>
                             <span className="icon-circle"><Play size={20} fill="currentColor" /></span>
                             Listen to Song
                         </button>
@@ -85,22 +96,25 @@ export function InfoGateway({ bird }) {
     );
 }
 
-export function AudioPlayer({ audioUrl }) {
-    if (!audioUrl) return null;
-
+export function AudioPlayer({ audioUrl, visible }) {
     return (
-        <div className="audio-player-container">
+        <div id="audio-player" className={`audio-player-container ${visible ? 'visible' : ''}`}>
             <div className="container">
-                <div className="player-box">
-                    <div className="player-info">
-                        <h4>Live Recording</h4>
-                        <p className="subtext">From Xeno-canto Database</p>
+                {audioUrl ? (
+                    <div className="player-box">
+                        <div className="player-info">
+                            <h4>Live Recording</h4>
+                            <p className="subtext">From Xeno-canto Database</p>
+                        </div>
+                        <audio controls className="native-audio" src={audioUrl} key={audioUrl}>
+                            Your browser does not support the audio element.
+                        </audio>
                     </div>
-                    <audio controls className="native-audio">
-                        <source src={audioUrl} type="audio/mpeg" />
-                        Your browser does not support the audio element.
-                    </audio>
-                </div>
+                ) : (
+                    <div className="player-empty-state" style={{ textAlign: 'center', color: '#cbd5e1' }}>
+                        <p>No audio recording available for this species.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

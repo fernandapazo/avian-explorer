@@ -4,12 +4,14 @@ import { useParams, Link } from 'react-router-dom';
 import { fetchBirdById } from '../lib/api';
 import { ArrowLeft } from 'lucide-react';
 import { DetailHero, InfoGateway, AudioPlayer } from '../components/detail/DetailComponents';
+import SightingMap from '../components/detail/SightingMap';
 import '../styles/BirdDetail.css';
 
 export default function BirdDetail() {
     const { uid } = useParams();
     const [bird, setBird] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showAudio, setShowAudio] = useState(false);
 
     useEffect(() => {
         async function loadBird() {
@@ -47,18 +49,17 @@ export default function BirdDetail() {
                 </div>
             </div>
 
-            <DetailHero bird={bird} />
+            <DetailHero bird={bird} onPlay={() => setShowAudio(true)} />
 
             {/* Audio Player Section */}
-            {bird.audio && <AudioPlayer audioUrl={bird.audio} />}
+            <AudioPlayer audioUrl={bird.audio} visible={showAudio} />
 
             <InfoGateway bird={bird} />
 
             <section className="map-section container">
                 <h3 className="section-label">Sighting Map</h3>
-                <div className="map-placeholder">
-                    <div className="map-marker"></div>
-                    <p className="map-label">Recent sighting near {bird.location}</p>
+                <div className="map-wrapper" style={{ height: '400px', borderRadius: '1rem', overflow: 'hidden' }}>
+                    <SightingMap coords={bird.coords} placeName={bird.location} />
                 </div>
             </section>
 

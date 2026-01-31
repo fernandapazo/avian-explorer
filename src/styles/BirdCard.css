@@ -1,4 +1,7 @@
 .bird-card {
+    width: 100%;
+    max-width: 400px;
+    /* Prevent full-screen stretch on mobile */
     display: flex;
     flex-direction: column;
     background-color: var(--color-white);

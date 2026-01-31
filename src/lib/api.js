@@ -70,6 +70,22 @@ export async function fetchBirds(query = '') {
                 // We primarily use our logical fallback if the API image is missing/broken
                 const apiImage = (item.images && item.images.length > 0) ? item.images[0] : null;
 
+                // Determine Coordinates
+                let lat = item.lat;
+                let lng = item.lng;
+
+                // Fallback to recording coordinates if main item lacks them
+                if ((!lat || !lng) && item.recordings && item.recordings.length > 0) {
+                    const rec = item.recordings[0];
+                    if (rec.lat && rec.lng) {
+                        lat = rec.lat;
+                        lng = rec.lng;
+                    }
+                }
+
+                // Ensure they are numbers
+                const coords = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null;
+
                 uniqueBirds.push({
                     // Use Name as ID for robust routing since numeric IDs vary between endpoints
                     uid: englishName,
@@ -86,6 +102,7 @@ export async function fetchBirds(query = '') {
                     wingspan: `${Math.floor(Math.random() * 50) + 20} cm`,
                     diet: "Insects, Seeds, Berries",
                     audio: audioUrl,
+                    coords: coords,
                     location: item.cnt || (item.recordings && item.recordings[0]?.cnt) || "North America"
                 });
             }

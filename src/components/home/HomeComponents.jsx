@@ -1,12 +1,26 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin, Activity, Users, Globe } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { fetchBirds } from '../../lib/api';
 import '../../styles/Home.css';
 
 export function Hero() {
     const [query, setQuery] = useState('');
+    const [heroImage, setHeroImage] = useState(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        async function loadHeroImage() {
+            const birds = await fetchBirds();
+            if (birds && birds.length > 0) {
+                // Pick a random bird implementation for variation
+                const randomBird = birds[Math.floor(Math.random() * birds.length)];
+                // Use full resolution image
+                setHeroImage(randomBird.images.full);
+            }
+        }
+        loadHeroImage();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -15,8 +29,10 @@ export function Hero() {
         }
     };
 
+    const heroStyle = heroImage ? { backgroundImage: `url(${heroImage})` } : {};
+
     return (
-        <section className="hero">
+        <section className="hero" style={heroStyle}>
             <div className="hero-overlay"></div>
             <div className="container hero-content">
                 <div className="hero-badge">
