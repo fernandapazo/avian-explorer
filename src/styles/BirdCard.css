@@ -5,55 +5,107 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f1f5f9;
     height: 100%;
+    position: relative;
 }
 
 .bird-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px);
     box-shadow: var(--shadow-lg);
+    border-color: var(--color-accent);
 }
 
 .bird-card-image-wrapper {
     aspect-ratio: 4/3;
     overflow: hidden;
-    background-color: var(--color-surface-hover);
+    background-color: #e2e8f0;
+    position: relative;
 }
 
 .bird-card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.7s ease;
 }
 
 .bird-card:hover .bird-card-image {
-    transform: scale(1.05);
+    transform: scale(1.1);
+}
+
+.card-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: white;
+    color: var(--color-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .bird-card-content {
-    padding: var(--spacing-md);
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 0.5rem;
 }
 
-.bird-card-latin {
-    font-size: 0.75rem;
-    color: var(--color-accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .bird-card-title {
     font-size: 1.25rem;
     color: var(--color-primary);
     margin: 0;
+    font-weight: 700;
 }
 
-.bird-card-subtitle {
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px #e2e8f0;
+}
+
+.status-dot.green {
+    background-color: var(--color-accent);
+}
+
+.status-dot.orange {
+    background-color: #f59e0b;
+}
+
+.bird-card-latin {
     font-size: 0.875rem;
     color: var(--color-text-light);
     font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.card-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 1rem;
+}
+
+.footer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-text-light);
+    font-size: 0.75rem;
+    font-weight: 600;
 }

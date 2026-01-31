@@ -1,0 +1,107 @@
+
+import { Play, Share2, Info, Feather, Map as MapIcon, Leaf, Ruler } from 'lucide-react';
+import '../../styles/BirdDetail.css';
+
+export function DetailHero({ bird }) {
+    return (
+        <section className="detail-hero">
+            <div className="container hero-grid">
+                <div className="detail-visual">
+                    <img src={bird.images.full} alt={bird.name.english} className="hero-img" />
+                    <div className="img-overlay">
+                        <button className="expand-btn">View Full Gallery</button>
+                    </div>
+                </div>
+
+                <div className="detail-header">
+                    <div className="header-badges">
+                        <span className="badge-pill green">Least Concern</span>
+                        <span className="badge-pill outline">{bird.name.latin}</span>
+                    </div>
+
+                    <h1 className="species-name">{bird.name.english}</h1>
+                    <p className="species-desc">
+                        A common sight in {bird.location}, known for its distinctive
+                        appearance and behavior. {bird.funFact || "This species is a favorite among birdwatchers."}
+                    </p>
+
+                    <div className="action-row">
+                        <button className="btn btn-primary big-btn">
+                            <span className="icon-circle"><Play size={20} fill="currentColor" /></span>
+                            Listen to Song
+                        </button>
+                        <button className="btn btn-outline big-btn">
+                            <Share2 size={20} /> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+export function InfoGateway({ bird }) {
+    return (
+        <section className="gateway-section">
+            <div className="container">
+                <h3 className="section-label">Biological Data</h3>
+                <div className="gateway-grid">
+
+                    <div className="data-card">
+                        <div className="card-icon"><Leaf size={24} color="#4ade80" /></div>
+                        <div className="card-data">
+                            <span className="label">Primary Diet</span>
+                            <span className="value">{bird.diet}</span>
+                        </div>
+                    </div>
+
+                    <div className="data-card">
+                        <div className="card-icon"><Ruler size={24} color="#4ade80" /></div>
+                        <div className="card-data">
+                            <span className="label">Avg. Wingspan</span>
+                            <span className="value">{bird.wingspan}</span>
+                        </div>
+                    </div>
+
+                    <div className="data-card">
+                        <div className="card-icon"><Feather size={24} color="#4ade80" /></div>
+                        <div className="card-data">
+                            <span className="label">Lifespan</span>
+                            <span className="value">~5-8 Years</span>
+                        </div>
+                    </div>
+
+                    <div className="data-card">
+                        <div className="card-icon"><MapIcon size={24} color="#4ade80" /></div>
+                        <div className="card-data">
+                            <span className="label">Habitat</span>
+                            <span className="value">Open Woodlands</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    );
+}
+
+export function AudioPlayer({ audioUrl }) {
+    if (!audioUrl) return null;
+
+    return (
+        <div className="audio-player-container">
+            <div className="container">
+                <div className="player-box">
+                    <div className="player-info">
+                        <h4>Live Recording</h4>
+                        <p className="subtext">From Xeno-canto Database</p>
+                    </div>
+                    <audio controls className="native-audio">
+                        <source src={audioUrl} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+        </div>
+    );
+}

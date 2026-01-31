@@ -1,4 +1,6 @@
+
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { fetchBirds } from '../lib/api';
 import BirdCard from '../components/BirdCard';
@@ -7,27 +9,34 @@ import '../styles/Discovery.css';
 export default function Discovery() {
     const [birds, setBirds] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Initialize search term from URL or empty string
+    const initialQuery = searchParams.get('q') || '';
+    const [searchTerm, setSearchTerm] = useState(initialQuery);
 
     useEffect(() => {
         async function loadBirds() {
-            const data = await fetchBirds();
+            setLoading(true);
+            // Pass searchTerm directly to API for server-side filtering
+            const data = await fetchBirds(searchTerm);
             setBirds(data);
             setLoading(false);
         }
-        loadBirds();
-    }, []);
 
-    const filteredBirds = useMemo(() => {
-        return birds.filter(bird => {
-            const term = searchTerm.toLowerCase();
-            return (
-                bird.name.english.toLowerCase().includes(term) ||
-                bird.name.spanish.toLowerCase().includes(term) ||
-                bird.name.latin.toLowerCase().includes(term)
-            );
-        });
-    }, [birds, searchTerm]);
+        // Debounce slightly to avoid pounding API on every keystroke
+        const timeoutId = setTimeout(() => {
+            loadBirds();
+            // Update URL
+            if (searchTerm) setSearchParams({ q: searchTerm });
+            else setSearchParams({});
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, setSearchParams]);
+
+    // We no longer need useMemo filtering since API does it
+    const filteredBirds = birds;
 
     return (
         <div className="discovery-page">
