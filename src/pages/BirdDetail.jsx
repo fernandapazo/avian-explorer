@@ -5,6 +5,7 @@ import { fetchBirdById } from '../lib/api';
 import { ArrowLeft } from 'lucide-react';
 import { DetailHero, InfoGateway, AudioPlayer } from '../components/detail/DetailComponents';
 import SightingMap from '../components/detail/SightingMap';
+import ImageGallery from '../components/detail/ImageGallery';
 import '../styles/BirdDetail.css';
 
 export default function BirdDetail() {
@@ -12,6 +13,7 @@ export default function BirdDetail() {
     const [bird, setBird] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showAudio, setShowAudio] = useState(false);
+    const [showGallery, setShowGallery] = useState(false);
 
     useEffect(() => {
         async function loadBird() {
@@ -49,7 +51,11 @@ export default function BirdDetail() {
                 </div>
             </div>
 
-            <DetailHero bird={bird} onPlay={() => setShowAudio(true)} />
+            <DetailHero
+                bird={bird}
+                onPlay={() => setShowAudio(true)}
+                onGallery={() => setShowGallery(true)}
+            />
 
             {/* Audio Player Section */}
             <AudioPlayer audioUrl={bird.audio} visible={showAudio} />
@@ -62,6 +68,12 @@ export default function BirdDetail() {
                     <SightingMap coords={bird.coords} placeName={bird.location} />
                 </div>
             </section>
+
+            <ImageGallery
+                images={bird.images.all}
+                isOpen={showGallery}
+                onClose={() => setShowGallery(false)}
+            />
 
         </div>
     );

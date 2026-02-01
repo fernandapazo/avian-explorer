@@ -1,8 +1,8 @@
 
-import { Play, Share2, Info, Feather, Map as MapIcon, Leaf, Ruler } from 'lucide-react';
+import { Play, Share2, Info, Feather, Map as MapIcon, Leaf, Ruler, MapPin, Camera } from 'lucide-react';
 import '../../styles/BirdDetail.css';
 
-export function DetailHero({ bird, onPlay }) {
+export function DetailHero({ bird, onPlay, onGallery }) {
     const scrollToAudio = () => {
         if (onPlay) onPlay();
         // Small delay to allow expansion before scrolling
@@ -20,7 +20,10 @@ export function DetailHero({ bird, onPlay }) {
                 <div className="detail-visual">
                     <img src={bird.images.full} alt={bird.name.english} className="hero-img" />
                     <div className="img-overlay">
-                        <button className="expand-btn">View Full Gallery</button>
+                        <button className="expand-btn" onClick={onGallery}>
+                            <Camera size={18} />
+                            View Gallery
+                        </button>
                     </div>
                 </div>
 
@@ -28,6 +31,10 @@ export function DetailHero({ bird, onPlay }) {
                     <div className="header-badges">
                         <span className="badge-pill green">{bird.conservationStatus || 'Least Concern'}</span>
                         <span className="badge-pill outline">{bird.name.latin}</span>
+                        <span className="badge-pill outline">
+                            <MapPin size={12} style={{ marginRight: '4px', display: 'inline-block' }} />
+                            {bird.location}
+                        </span>
                     </div>
 
                     <h1 className="species-name">{bird.name.english}</h1>

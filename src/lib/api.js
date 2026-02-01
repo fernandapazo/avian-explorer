@@ -75,6 +75,7 @@ export async function fetchBirds(query = '', filters = {}) {
                 }
 
                 const apiImage = (item.images && item.images.length > 0) ? item.images[0] : null;
+                const allImages = item.images || [];
 
                 let lat = item.lat;
                 let lng = item.lng;
@@ -96,7 +97,8 @@ export async function fetchBirds(query = '', filters = {}) {
                     },
                     images: {
                         main: apiImage || getFallbackImage(englishName),
-                        full: apiImage || getFallbackImage(englishName)
+                        full: apiImage || getFallbackImage(englishName),
+                        all: allImages // Store all images
                     },
                     conservationStatus: item.status || "Least Concern",
                     wingspan: `${Math.floor(Math.random() * 50) + 20} cm`,
@@ -195,7 +197,8 @@ async function fetchBirdAudio(scientificName) {
             return {
                 file: rec.file,
                 lat: rec.lat ? parseFloat(rec.lat) : null,
-                lng: rec.lon ? parseFloat(rec.lon) : null // Map expects 'lng', API gives 'lon'
+                lng: rec.lon ? parseFloat(rec.lon) : null, // Map expects 'lng', API gives 'lon'
+                country: rec.cnt || null // Extract country
             };
         }
         return null;
@@ -224,6 +227,10 @@ export async function fetchBirdById(nameId) {
             // Only update coords if we got valid ones from Xeno-canto
             if (xcData.lat && xcData.lng) {
                 bird.coords = { lat: xcData.lat, lng: xcData.lng };
+            }
+            // Update location with specific country if available
+            if (xcData.country) {
+                bird.location = xcData.country;
             }
         }
     }
