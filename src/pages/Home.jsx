@@ -1,21 +1,30 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchBirds } from '../lib/api';
 import BirdCard from '../components/BirdCard';
 import { Hero, StatsBar } from '../components/home/HomeComponents';
+import HomeMap from '../components/home/HomeMap';
 import '../styles/Home.css';
 
 export default function Home() {
     const [featuredBirds, setFeaturedBirds] = useState([]);
+    const [mapBirds, setMapBirds] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadBirds() {
             const allBirds = await fetchBirds();
-            // Pick 4 random birds for the featured section (matching design layout)
-            const shuffled = allBirds.sort(() => 0.5 - Math.random());
+
+            // Pick 4 random birds for the featured section
+            const shuffled = [...allBirds].sort(() => 0.5 - Math.random());
             setFeaturedBirds(shuffled.slice(0, 4));
+
+            // Filter birds specifically for the map (must have coords)
+            const birdsWithCoords = allBirds.filter(b => b.coords && b.coords.lat && b.coords.lng);
+            // Pick a reasonable subset for the map to avoid clutter (e.g. 50 random ones)
+            const mapSubset = birdsWithCoords.sort(() => 0.5 - Math.random()).slice(0, 50);
+            setMapBirds(mapSubset);
+
             setLoading(false);
         }
         loadBirds();
@@ -53,6 +62,9 @@ export default function Home() {
                     )}
                 </div>
             </section>
+
+            {/* Global Sightings Map */}
+            {!loading && <HomeMap birds={mapBirds} />}
 
 
 
